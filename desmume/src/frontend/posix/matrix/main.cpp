@@ -294,6 +294,11 @@ static void Draw(class configured_features *cfg) {
 		SDL_RenderCopy(renderer, screen[i], NULL, cfg->horizontal ? &destrect_h[i] : &destrect_v[i]);
 		off += n;
 		//TODO Somewhere in here I can pull the current frame.
+		/*sendToMatrixTarget(
+			&p,  	//pointer to ds screen buffer
+			i, 		//Screen Index
+			pitch, 	//Number of bytes in 1 line. = NATIVE_DIPSPLAY_WIDTH*2 for 555 RGB. Decoder will need to translate to 8bpp RGB using the display intensity
+		); */
 	}
 	SDL_RenderPresent(renderer);
 	return;
