@@ -121,7 +121,7 @@ const char * save_type_names[] = {
 /* Our keyboard config is different because of the directional keys */
 /* Please note that m is used for fake microphone */
 const u32 cli_kb_cfg[NB_KEYS] =
-  { 
+  {
     SDLK_x,         // A
     SDLK_z,         // B
     SDLK_RSHIFT,    // select
@@ -293,6 +293,7 @@ static void Draw(class configured_features *cfg) {
 		SDL_UnlockTexture(screen[i]);
 		SDL_RenderCopy(renderer, screen[i], NULL, cfg->horizontal ? &destrect_h[i] : &destrect_v[i]);
 		off += n;
+		//TODO Somewhere in here I can pull the current frame.
 	}
 	SDL_RenderPresent(renderer);
 	return;
@@ -322,7 +323,7 @@ static void desmume_cycle(struct ctrls_event_config * cfg)
 	mouse.down = 2;
     }
     if(mouse.click)
-      { 
+      {
         NDS_releaseTouch();
         mouse.click = 0;
       }
@@ -427,7 +428,7 @@ int main(int argc, char ** argv) {
 			slot2_device_type = NDS_SLOT2_NONE;
 			break;
 	}
-    
+
     slot2_Init();
     slot2_Change((NDS_SLOT2_TYPE)slot2_device_type);
 
@@ -542,7 +543,7 @@ int main(int argc, char ** argv) {
   T_AGG_RGB555 agg_targetScreen_cli((u8 *)GPU->GetDisplayInfo().masterNativeBuffer16, 256, 384, 512);
   aggDraw.hud = &agg_targetScreen_cli;
   aggDraw.hud->setFont("verdana18_bold");
-  
+
   osd = new OSDCLASS(-1);
 #endif
 
