@@ -340,3 +340,6 @@ endif
 if get_option('frontend-gtk2')
   subdir('gtk2')
 endif
+if get_option('frontend-matrix')
+	subdir('matrix')
+endif
