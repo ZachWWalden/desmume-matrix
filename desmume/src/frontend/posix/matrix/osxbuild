@@ -1,0 +1,11 @@
+#!/bin/sh
+
+rm desmume-matrix.app.zip
+rm -rf desmume-matrix.app
+mkdir desmume-matrix.app
+mkdir desmume-matrix.app/MacOS
+cp desmume-matrix desmume-matrix.app/MacOS
+cp Info.plist desmume-matrix.app
+../gtk/dylibbundler -cd -d desmume-matrix.app/libs -b -x desmume-matrix.app/MacOS/desmume-matrix
+./fixups
+zip -r desmume-matrix.app.zip desmume-matrix.app
