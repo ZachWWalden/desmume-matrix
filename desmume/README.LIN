@@ -51,6 +51,7 @@ The following options specially are available on the CLI port:
 
 --opengl-2d         Enables using OpenGL for screen rendering
 --disable-sound     Disables the sound emulation
+--net-rgb			Enables the ability to send frame data to RGB Matrix displays over LAN (50 mbps per screen)
 
 NOTE:
 The Gtk+ and Glade builds use gtkGLext to handle the OpenGL
