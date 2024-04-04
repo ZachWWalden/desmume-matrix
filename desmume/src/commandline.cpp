@@ -12,6 +12,7 @@
 	GNU General Public License for more details.
 
 	You should have received a copy of the GNU General Public License
+
 	along with the this software.  If not, see <http://www.gnu.org/licenses/>.
 */
 
@@ -65,6 +66,10 @@ CommandLine::CommandLine()
 #ifdef HAVE_JIT
 , _cpu_mode(-1)
 , _jit_size(-1)
+#endif
+#ifdef HAVE_MATRIX
+, _ts_sink_addr(NULL)
+, _bs_sink_addr(NULL)
 #endif
 , _console_type(NULL)
 , _advanscene_import(NULL)
@@ -191,6 +196,12 @@ ENDL
 "Utility commands which occur in place of emulation:" ENDL
 " --advanscene-import PATH   Import advanscene, dump .ddb, and exit" ENDL
 ENDL
+#ifdef HAVE_MATRIX
+"Options to pass in IP addresses for Networked Matrix Displays:" ENDL
+" --top-sink-address SOCKET_ADDR Socket address for the top screen matrix sink" ENDL
+" --bottom-sink-address SOCKET_ADDR Socket address for the bottom screen matrix sink" ENDL
+ENDL
+#endif
 "These arguments may be reorganized/renamed in the future." ENDL ENDL
 ;
 
@@ -235,6 +246,11 @@ ENDL
 #define OPT_RTC_HOUR 801
 
 #define OPT_ADVANSCENE 900
+
+#ifdef HAVE_MATRIX
+#define OPT_TSADDR 1000
+#define OPT_BSADDR 1001
+#endif
 
 bool CommandLine::parse(int argc,char **argv)
 {
@@ -327,13 +343,18 @@ bool CommandLine::parse(int argc,char **argv)
 
 			//utilities
 			{ "advanscene-import", required_argument, NULL, OPT_ADVANSCENE},
-				
+			#ifdef HAVE_MATRIX
+			//Matrix Display Sinks
+			{ "top-sink-address", required_argument,NULL, OPT_TSADDR},
+			{ "bottom-sink-address", required_argument,NULL, OPT_BSADDR},
+			#endif
+
 			{0,0,0,0}
 		};
 
 		int c = getopt_long(argc,argv,"",long_options,&option_index);
 		if(c == -1) break;
-		if(c == '?') 
+		if(c == '?')
 			break;
 
 		switch(c)
@@ -392,6 +413,12 @@ bool CommandLine::parse(int argc,char **argv)
 		//utilities
 		case OPT_ADVANSCENE: CommonSettings.run_advanscene_import = optarg; break;
 		case OPT_LANGUAGE: language = atoi(optarg); break;
+
+		#ifdef HAVE_MATRIX
+		//matrix sink addresses
+		case OPT_TSADDR: _ts_sink_addr = optarg; break;
+		case OPT_BSADDR: _bs_sink_addr = optarg; break;
+		#endif
 		}
 	} //arg parsing loop
 
@@ -409,9 +436,9 @@ bool CommandLine::parse(int argc,char **argv)
 
 #ifdef HAVE_JIT
 	if(_cpu_mode != -1) CommonSettings.use_jit = (_cpu_mode==1);
-	if(_jit_size != -1) 
+	if(_jit_size != -1)
 	{
-		if ((_jit_size < 1) || (_jit_size > 100)) 
+		if ((_jit_size < 1) || (_jit_size > 100))
 			CommonSettings.jit_max_block_size = 100;
 		else
 			CommonSettings.jit_max_block_size = _jit_size;
@@ -433,7 +460,7 @@ bool CommandLine::parse(int argc,char **argv)
 		CommonSettings.DebugConsole = true;
 	}
 
-	//process 3d renderer 
+	//process 3d renderer
 	_render3d = strtoupper(_render3d);
 	if(_render3d == "NONE") render3d = COMMANDLINE_RENDER3D_NONE;
 	else if(_render3d == "SW") render3d = COMMANDLINE_RENDER3D_SW;
@@ -450,7 +477,7 @@ bool CommandLine::parse(int argc,char **argv)
 	//TODO NOT MAX PRIORITY! change ARM9BIOS etc to be a std::string
 	if(_bios_arm9) { CommonSettings.UseExtBIOS = true; strcpy(CommonSettings.ARM9BIOS,_bios_arm9); }
 	if(_bios_arm7) { CommonSettings.UseExtBIOS = true; strcpy(CommonSettings.ARM7BIOS,_bios_arm7); }
-	#ifndef HOST_WINDOWS 
+	#ifndef HOST_WINDOWS
 		if(_fw_path) { CommonSettings.UseExtFirmware = true; CommonSettings.UseExtFirmwareSettings = true; strcpy(CommonSettings.ExtFirmwarePath,_fw_path); }
 	#endif
 	if(_fw_boot) CommonSettings.BootFromFirmware = true;
@@ -469,7 +496,7 @@ bool CommandLine::parse(int argc,char **argv)
 	if(remain==1)
 		nds_file = argv[optind];
 	else if(remain>1) return false;
-	
+
 	return true;
 }
 
