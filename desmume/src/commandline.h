@@ -34,7 +34,7 @@ extern int _commandline_linux_nojoy;
 //this class will also eventually try to take over the responsibility of using the args that it handles
 //for example: preparing the emulator run by loading the rom, savestate, and/or movie in the correct pattern.
 //it should also populate CommonSettings with its initial values
-//EDIT: not really. combining this with what a frontend wants to do is complicated. 
+//EDIT: not really. combining this with what a frontend wants to do is complicated.
 //you might design the API so that the frontend sets all those up, but I'm not sure I like that
 //Really, this should be a passive structure that just collects the results provided by the shared command line processing, to be used later as appropriate
 //(and the CommonSettings setup REMOVED or at least refactored into a separate method)
@@ -64,13 +64,18 @@ private:
 	int _cpu_mode;
 	int _jit_size;
 #endif
-	char *_slot1;
+//Configuration variables for Matrix Sink addresses.
+#ifdef HAVE_MATRIX
+	char *_ts_sink_addr;
+	char *_bs_sink_addr;
+#endif
+	char* _slot1;
 	char *_slot1_fat_dir;
 	char *_console_type;
 	char *_advanscene_import;
 	int _rtc_day;
 	int _rtc_hour;
-	
+
 public:
 	//actual options: these may move to another struct
 	int load_slot;
@@ -102,7 +107,7 @@ public:
 	bool is_cflash_configured;
 	int _spu_sync_mode;
 	int _spu_sync_method;
-	
+
 	CommandLine();
 
 	bool parse(int argc,char **argv);
@@ -114,7 +119,7 @@ public:
 	void process_movieCommands();
 	//etc.
 	void process_addonCommands();
-	
+
 	//print a little help message for cases when erroneous commandlines are entered
 	void errorHelp(const char* binName);
 };
