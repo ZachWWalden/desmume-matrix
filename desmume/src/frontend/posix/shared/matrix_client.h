@@ -28,8 +28,18 @@
  * or you may write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
  */
+#ifndef MATRIX_CLIENT_H
+#define MATRIX_CLIENT_H
+#define HAVE_MATRIX
 
+#include "../../../types.h"
 
+struct nds_frame_packet
+{
+	u32 v_res;
+	u32 x_res;
+	u8 frame[];
+};
 
 class matrix_client
 {
@@ -44,3 +54,4 @@ public:
 
 private:
 };
+#endif
