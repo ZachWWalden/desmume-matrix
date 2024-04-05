@@ -68,8 +68,8 @@ CommandLine::CommandLine()
 , _jit_size(-1)
 #endif
 #ifdef HAVE_MATRIX
-, ts_sink_addr(NULL)
-, bs_sink_addr(NULL)
+, ts_sink_addr("")
+, bs_sink_addr("")
 #endif
 , _console_type(NULL)
 , _advanscene_import(NULL)
