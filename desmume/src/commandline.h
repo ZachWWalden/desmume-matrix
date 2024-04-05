@@ -69,6 +69,11 @@ public:
 	int windowed_fullscreen;
 	int frameskip;
 	int horizontal;
+//Configuration variables for Matrix Sink addresses.
+#ifdef HAVE_MATRIX
+	std::string ts_sink_addr;
+	std::string bs_sink_addr;
+#endif
 
 	bool parse(int argc,char **argv);
 
@@ -110,11 +115,6 @@ private:
 #ifdef HAVE_JIT
 	int _cpu_mode;
 	int _jit_size;
-#endif
-//Configuration variables for Matrix Sink addresses.
-#ifdef HAVE_MATRIX
-	char *_ts_sink_addr;
-	char *_bs_sink_addr;
 #endif
 	char* _slot1;
 	char *_slot1_fat_dir;

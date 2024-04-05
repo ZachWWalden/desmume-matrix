@@ -68,8 +68,8 @@ CommandLine::CommandLine()
 , _jit_size(-1)
 #endif
 #ifdef HAVE_MATRIX
-, _ts_sink_addr(NULL)
-, _bs_sink_addr(NULL)
+, ts_sink_addr(NULL)
+, bs_sink_addr(NULL)
 #endif
 , _console_type(NULL)
 , _advanscene_import(NULL)
@@ -416,8 +416,8 @@ bool CommandLine::parse(int argc,char **argv)
 
 		#ifdef HAVE_MATRIX
 		//matrix sink addresses
-		case OPT_TSADDR: _ts_sink_addr = optarg; break;
-		case OPT_BSADDR: _bs_sink_addr = optarg; break;
+		case OPT_TSADDR: ts_sink_addr = optarg; break;
+		case OPT_BSADDR: bs_sink_addr = optarg; break;
 		#endif
 		}
 	} //arg parsing loop
