@@ -53,5 +53,6 @@ public:
 	~matrix_client();
 
 private:
+	void ds_fb_to_u8(u16* ds_fb, u8* matrix_fb);
 };
 #endif
