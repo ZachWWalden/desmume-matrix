@@ -29,8 +29,8 @@
 #define VERSION "Unknown version"
 #endif
 
-#ifndef CLI_UI
-#define CLI_UI
+#ifndef MATRIX_UI
+#define MATRIX_UI
 #endif
 
 #include "../NDSSystem.h"
@@ -234,6 +234,11 @@ fill_config( class configured_features *config,
     goto error;
   }
 #endif
+
+  if(config->ts_sink_addr == "") {
+	g_printerr("Top Screen address required, IPv4:Port");
+	goto error;
+  }
 
   return 1;
 
