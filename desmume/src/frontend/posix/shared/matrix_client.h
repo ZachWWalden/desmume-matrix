@@ -32,14 +32,40 @@
 #define MATRIX_CLIENT_H
 #define HAVE_MATRIX
 
+#include <pthread.h>
+#include <mqueue.h>
+#include <sys/socket.h>
+#include <string>
+
 #include "../../../types.h"
 
-struct nds_frame_packet
+#pragma pack(push,1)
+struct SinkPacketHeader
 {
-	u32 v_res;
-	u32 x_res;
-	u8 frame[];
+	//Protocol Version
+	u8 protocol_vers;
+	//Priority
+	u8 priority;
+	//resolution
+	u8 h_res;
+	u8 v_res;
+	//Bytes for pixels
+	u8 bytes_per_pixel;
+	//color mode
+	u8 color_mode;
+	//Location
+	u8 h_loc;
+	u8 v_loc;
+	//Display intensity
+	float intensity;
 };
+
+struct HandshakeHeader
+{
+	uint8_t req_protocol_vers;
+	uint8_t success;
+};
+#pragma pack(pop)
 
 class matrix_client
 {
@@ -47,12 +73,15 @@ class matrix_client
 public:
 
 private:
+	int client_fd;
 	//Methods
 public:
 	matrix_client();
+	matrix_client(std::string addr);
 	~matrix_client();
 
+	bool send_frame(u16 *buffer,int height, int width);
+
 private:
-	void ds_fb_to_u8(u16* ds_fb, u8* matrix_fb);
 };
 #endif
