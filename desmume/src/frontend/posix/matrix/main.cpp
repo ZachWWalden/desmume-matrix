@@ -43,6 +43,7 @@
 #include "../rasterize.h"
 #include "../saves.h"
 #include "../frontend/modules/osd/agg/agg_osd.h"
+#include "../frontend/posic/shared/matrix_client.h"
 #include "../shared/desmume_config.h"
 #include "../commandline.h"
 #include "../slot2.h"
@@ -240,6 +241,11 @@ fill_config( class configured_features *config,
 	goto error;
   }
 
+  if(config->bs_sink_addr == "") {
+	g_printerr("Top Screen address required, IPv4:Port");
+	goto error;
+  }
+
   return 1;
 
 error:
@@ -273,7 +279,7 @@ static void
 resizeWindow_stub (u16 width, u16 height, void *screen_texture) {
 }
 
-static void Draw(class configured_features *cfg) {
+static void Draw(class configured_features *cfg, matrix_client *ts_client, matrix_client *bs_client) {
 	const float scale = cfg->scale;
 	const unsigned w = GPU_FRAMEBUFFER_NATIVE_WIDTH, h = GPU_FRAMEBUFFER_NATIVE_HEIGHT;
 	const int ws = w * scale, hs = h * scale;
@@ -298,12 +304,12 @@ static void Draw(class configured_features *cfg) {
 		SDL_UnlockTexture(screen[i]);
 		SDL_RenderCopy(renderer, screen[i], NULL, cfg->horizontal ? &destrect_h[i] : &destrect_v[i]);
 		off += n;
-		//TODO Somewhere in here I can pull the current frame.
-		/*sendToMatrixTarget(
-			&p,  	//pointer to ds screen buffer
-			i, 		//Screen Index
-			pitch, 	//Number of bytes in 1 line. = NATIVE_DIPSPLAY_WIDTH*2 for 555 RGB. Decoder will need to translate to 8bpp RGB using the display intensity
-		); */
+		//send the current frame to matrix addresses passed through cli.
+		if(ts_client != nullptr)
+			ts_client->send_frame(displayInfo.nativeBuffer16[NDSDisplayID_Main], h, w);
+		if(bs_client != nullptr)
+			bs_client->send_frame(displayInfo.nativeBuffer16[NDSDisplayID_Touch], h, w);
+
 	}
 	SDL_RenderPresent(renderer);
 	return;
@@ -378,11 +384,20 @@ int main(int argc, char ** argv) {
   NDS_Init();
 
   init_config( &my_config);
-
   if ( !fill_config( &my_config, argc, argv)) {
     exit(1);
   }
 
+  matrix_client *ts_client = nullptr, *bs_client = nullptr;
+//TODO Earliest point to init network object.
+  if(my_config.ts_sink_addr != "NULL")
+  {
+	ts_client = new matrix_client(my_config.ts_sink_addr);
+  }
+  if(my_config.bs_sink_addr != "NULL")
+  {
+	bs_client = new matrix_client(my_config.bs_sink_addr);
+  }
   /* use any language set on the command line */
   if ( my_config.firmware_language != -1) {
     CommonSettings.fwConfig.language = my_config.firmware_language;
