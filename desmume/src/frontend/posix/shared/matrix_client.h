@@ -1,13 +1,13 @@
 /*==================================================================================
  *Class - matrix_client
  *Author - Zach Walden
- *Created -
- *Last Changed -
+ *Created - May 2024
+ *Last Changed - 6/7/2025
  *Description -
 ====================================================================================*/
 
 /*
- * This program source code file is part of PROJECT_NAME
+ * This program source code file is part of desmume-matrix
  *
  * Copyright (C) 2022 Zachary Walden zachary.walden@eagles.oc.edu
  *
@@ -32,12 +32,16 @@
 #define MATRIX_CLIENT_H
 #define HAVE_MATRIX
 
-#include <pthread.h>
-#include <mqueue.h>
+//#include <pthread.h>
 #include <sys/socket.h>
 #include <string>
+#include <unistd.h>
+#include <netinet/in.h>
+#include <iostream>
 
 #include "../../../types.h"
+
+#define PROTOCOL_VERSION 0x00
 
 #pragma pack(push,1)
 struct SinkPacketHeader
@@ -74,6 +78,7 @@ public:
 
 private:
 	int client_fd;
+	bool conn_valid = false;
 	//Methods
 public:
 	matrix_client();
