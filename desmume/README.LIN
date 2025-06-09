@@ -23,7 +23,7 @@ To build, first cd to src/frontend/posix and run
 
 Then build the program by running `ninja -C build`
 
-It will generate three programs:
+It will generate two programs:
 1) "desmume" in the "build/gtk" directory;
 2) "desmume-cli" in the "build/cli" directory.
 
