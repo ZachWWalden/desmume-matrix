@@ -68,8 +68,8 @@ CommandLine::CommandLine()
 , _jit_size(-1)
 #endif
 #ifdef HAVE_MATRIX
-, ts_sink_addr("")
-, bs_sink_addr("")
+, ts_sink_addr("NULL")
+, bs_sink_addr("NULL")
 #endif
 , _console_type(NULL)
 , _advanscene_import(NULL)
@@ -198,8 +198,8 @@ ENDL
 ENDL
 #ifdef HAVE_MATRIX
 "Options to pass in IP addresses for Networked Matrix Displays:" ENDL
-" --top-sink-address SOCKET_ADDR Socket address for the top screen matrix sink" ENDL
-" --bottom-sink-address SOCKET_ADDR Socket address for the bottom screen matrix sink" ENDL
+" --ts-sink-address IPv4_ADDR:PORT Socket address for the top screen matrix sink" ENDL
+" --bs-sink-address IPv4_ADDR:PORT Socket address for the bottom screen matrix sink" ENDL
 ENDL
 #endif
 "These arguments may be reorganized/renamed in the future." ENDL ENDL
@@ -345,8 +345,8 @@ bool CommandLine::parse(int argc,char **argv)
 			{ "advanscene-import", required_argument, NULL, OPT_ADVANSCENE},
 			#ifdef HAVE_MATRIX
 			//Matrix Display Sinks
-			{ "top-sink-address", required_argument,NULL, OPT_TSADDR},
-			{ "bottom-sink-address", required_argument,NULL, OPT_BSADDR},
+			{ "ts-sink-address", required_argument,NULL, OPT_TSADDR},
+			{ "bs-sink-address", required_argument,NULL, OPT_BSADDR},
 			#endif
 
 			{0,0,0,0}
@@ -414,11 +414,11 @@ bool CommandLine::parse(int argc,char **argv)
 		case OPT_ADVANSCENE: CommonSettings.run_advanscene_import = optarg; break;
 		case OPT_LANGUAGE: language = atoi(optarg); break;
 
-		#ifdef HAVE_MATRIX
+#ifdef HAVE_MATRIX
 		//matrix sink addresses
 		case OPT_TSADDR: ts_sink_addr = optarg; break;
 		case OPT_BSADDR: bs_sink_addr = optarg; break;
-		#endif
+#endif
 		}
 	} //arg parsing loop
 

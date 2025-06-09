@@ -51,7 +51,11 @@ The following options specially are available on the CLI port:
 
 --opengl-2d         Enables using OpenGL for screen rendering
 --disable-sound     Disables the sound emulation
---net-rgb			Enables the ability to send frame data to RGB Matrix displays over LAN (50 mbps per screen)
+
+The following options specially are available on the CLI port:
+
+--ts-sink-address	IPv4_ADDR:PORT Socket address for the top screen matrix sink.
+--bs-sink-address   IPv4_ADDR:PORT Socket address for the bottom screen matrix sink.
 
 NOTE:
 The Gtk+ and Glade builds use gtkGLext to handle the OpenGL
