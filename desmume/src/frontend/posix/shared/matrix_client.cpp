@@ -86,7 +86,24 @@ bool matrix_client::send_frame(u16 *buffer,int height, int width)
 		return false;
 	bool ret_val = false;
 	//TODO handle errors.
-	int valsend = send(this->client_fd, (u8*)buffer, height * width * 2, 0);
+	//send header
+	SinkPacketHeader frame_header;
+	frame_header.bytes_per_pixel = 2;
+	frame_header.color_mode = 0x01;
+	frame_header.h_res = width - 1;
+	frame_header.v_res = height - 1;
+	frame_header.h_loc = 0;
+	frame_header.v_loc = 0;
+	frame_header.priority = 0xFF;
+	frame_header.protocol_vers = 0x00;
+	frame_header.intensity = 0.0f;
+	int valsend;
+	valsend = send(this->client_fd, (u8*)(&frame_header), sizeof(frame_header), 0);
+	if(valsend != -1)
+		ret_val = true;
+	else
+		g_printerr("Frame header failed to send to the server\n");
+	valsend = send(this->client_fd, (u8*)buffer, height * width * 2, 0);
 	if(valsend != -1)
 		ret_val = true;
 	else
