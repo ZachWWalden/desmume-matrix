@@ -519,7 +519,7 @@ int main(int argc, char ** argv) {
       fprintf(stderr, "Warning: X11 not thread-safe\n");
     }
 
-  if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) == -1)
+  if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_JOYSTICK| SDL_INIT_GAMECONTROLLER) == -1)
     {
       fprintf(stderr, "Error trying to initialize SDL: %s\n",
               SDL_GetError());
@@ -552,10 +552,8 @@ int main(int argc, char ** argv) {
   /* Initialize joysticks */
   if(!init_joy()) return 1;
   /* Load keyboard and joystick configuration */
-  keyfile = desmume_config_read_file(cli_kb_cfg);
+  keyfile = desmume_config_read_file(cli_kb_cfg, "SDLKEYS");
   desmume_config_dispose(keyfile);
-  /* Since gtk has a different mapping the keys stop to work with the saved configuration :| */
-  load_default_config(cli_kb_cfg);
 
   if(my_config.load_slot != -1){
     loadstate_slot(my_config.load_slot);
@@ -574,7 +572,6 @@ int main(int argc, char ** argv) {
   osd = new OSDCLASS(-1);
 #endif
 
-  ctrls_cfg.boost = 0;
   ctrls_cfg.sdl_quit = 0;
   ctrls_cfg.auto_pause = my_config.auto_pause;
   ctrls_cfg.focused = 1;
@@ -591,7 +588,7 @@ int main(int argc, char ** argv) {
     DrawHUD();
 #endif
 
-    Draw(&my_config);
+    Draw(&my_config, ts_client, bs_client);
 
 #ifdef HAVE_LIBAGG
     osd->clear();
@@ -605,7 +602,7 @@ int main(int argc, char ** argv) {
 #ifdef DISPLAY_FPS
     now = SDL_GetTicks();
 #endif
-    if ( !my_config.disable_limiter && !ctrls_cfg.boost) {
+    if ( !my_config.disable_limiter && !(ctrls_cfg.keypad & KEYMASK_(KEY_BOOST - 1))) {
 #ifndef DISPLAY_FPS
       now = SDL_GetTicks();
 #endif
