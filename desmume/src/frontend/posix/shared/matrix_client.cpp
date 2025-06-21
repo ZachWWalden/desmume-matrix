@@ -5,16 +5,37 @@ matrix_client::matrix_client()
 }
 matrix_client::matrix_client(std::string addr)
 {
-	matrix_client();
 	//from required address info with  passed string.
+	//split string on ':'
+	int colon = addr.find(':');
+	//create ip and port substrs
+	std::string ip_addr = addr.substr(0, colon);
+	std::string port = addr.substr(colon + 1, addr.length() - colon);
+	//make socket address struct
+	struct sockaddr_in server_addr;
+
+	server_addr.sin_family = AF_INET;
+	server_addr.sin_port = htons((u16)std::stoi(port));
+
+	if (inet_pton(AF_INET, ip_addr.c_str(), &server_addr.sin_addr) <= 0)
+	{
+		//TODO log this failure
+		this->conn_valid = false;
+    }
 	//connect to server
+	int valsend, valread, status;
+	if ((status = connect(this->client_fd, (struct sockaddr*)&server_addr, sizeof(server_addr))) < 0)
+	{
+		//TODO log this failure
+		this->conn_valid = false;
+    }
 	//send handshake packet
 	HandshakeHeader hndshk;
 	hndshk.success = false;
 	hndshk.req_protocol_vers = PROTOCOL_VERSION;
-	int valsend = send(this->client_fd, (u8*)(&hndshk), sizeof(HandshakeHeader), 0);
+	valsend = send(this->client_fd, (u8*)(&hndshk), sizeof(HandshakeHeader), 0);
 	//read handshake response from server
-	int valread = recv(this->client_fd, (u8*)(&hndshk), sizeof(HandshakeHeader),0);
+	valread = recv(this->client_fd, (u8*)(&hndshk), sizeof(HandshakeHeader),0);
 	// success ? carry on : (server_protocol_version_valid ? send handshake success, carry on : send fail packet, destroy maxtrix client, emit error
 	if(hndshk.success == 1)
 	{
@@ -39,6 +60,7 @@ matrix_client::matrix_client(std::string addr)
 }
 matrix_client::~matrix_client()
 {
+	//TODO destroy object.
 }
 
 bool matrix_client::send_frame(u16 *buffer,int height, int width)
@@ -70,7 +92,7 @@ bool matrix_client::send_frame(u16 *buffer,int height, int width)
 
 
 /*
-<++> matrix_client::<++>()
+ matrix_client::<++>()
 {
 
 }
