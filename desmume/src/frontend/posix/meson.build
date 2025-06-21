@@ -325,6 +325,11 @@ if get_option('gdb-stub')
   ]
 endif
 
+# enable Matrix options in libdesmume.
+if get_option('frontend-matrix')
+	add_global_arguments('-DHAVE_MATRIX=true', language: ['c', 'cpp'])
+endif
+
 libdesmume = static_library('desmume',
   libdesmume_src,
   dependencies: dependencies,

@@ -30,7 +30,6 @@
  */
 #ifndef MATRIX_CLIENT_H
 #define MATRIX_CLIENT_H
-#define HAVE_MATRIX
 
 //#include <pthread.h>
 #include <sys/socket.h>
@@ -39,6 +38,7 @@
 #include <netinet/in.h>
 #include <iostream>
 #include <arpa/inet.h>
+#include <glib.h>
 
 #include "../../../types.h"
 
