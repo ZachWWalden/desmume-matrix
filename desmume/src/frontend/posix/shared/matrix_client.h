@@ -38,6 +38,7 @@
 #include <unistd.h>
 #include <netinet/in.h>
 #include <iostream>
+#include <arpa/inet.h>
 
 #include "../../../types.h"
 
