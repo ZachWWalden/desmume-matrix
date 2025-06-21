@@ -389,7 +389,6 @@ int main(int argc, char ** argv) {
   }
 
   matrix_client *ts_client = nullptr, *bs_client = nullptr;
-//TODO Earliest point to init network object.
   if(my_config.ts_sink_addr != "NULL")
   {
 	ts_client = new matrix_client(my_config.ts_sink_addr);
@@ -635,6 +634,9 @@ int main(int argc, char ** argv) {
     }
 #endif
   }
+
+  delete ts_client;
+  delete bs_client;
 
   /* Unload joystick */
   uninit_joy();
