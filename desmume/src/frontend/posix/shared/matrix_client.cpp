@@ -92,7 +92,7 @@ bool matrix_client::send_frame(u16 *buffer,int height, int width)
 
 
 /*
- matrix_client::<++>()
+<++> matrix_client::<++>()
 {
 
 }
