@@ -1,4 +1,5 @@
 #include "matrix_client.h"
+#include "glib.h"
 
 matrix_client::matrix_client()
 {
@@ -19,14 +20,14 @@ matrix_client::matrix_client(std::string addr)
 
 	if (inet_pton(AF_INET, ip_addr.c_str(), &server_addr.sin_addr) <= 0)
 	{
-		//TODO log this failure
+		g_printerr("Converting matrix sink ip addr, to network byte order binary failed\n");
 		this->conn_valid = false;
     }
 	//connect to server
 	int valsend, valread, status;
 	if ((status = connect(this->client_fd, (struct sockaddr*)&server_addr, sizeof(server_addr))) < 0)
 	{
-		//TODO log this failure
+		g_printerr("Connecting to matrix sink server failed\n");
 		this->conn_valid = false;
     }
 	//send handshake packet
@@ -34,8 +35,18 @@ matrix_client::matrix_client(std::string addr)
 	hndshk.success = false;
 	hndshk.req_protocol_vers = PROTOCOL_VERSION;
 	valsend = send(this->client_fd, (u8*)(&hndshk), sizeof(HandshakeHeader), 0);
+	if(valsend < 0)
+	{
+		g_printerr("First handshake failed send to server\n");
+		this->conn_valid = false;
+	}
 	//read handshake response from server
 	valread = recv(this->client_fd, (u8*)(&hndshk), sizeof(HandshakeHeader),0);
+	if(valread < 0)
+	{
+		g_printerr("Failed to receive handshake packet from server\n");
+		this->conn_valid = false;
+	}
 	// success ? carry on : (server_protocol_version_valid ? send handshake success, carry on : send fail packet, destroy maxtrix client, emit error
 	if(hndshk.success == 1)
 	{
@@ -48,12 +59,18 @@ matrix_client::matrix_client(std::string addr)
 		if(hndshk.req_protocol_vers == PROTOCOL_VERSION)
 		{
 			hndshk.success = 1;
-			int valsend = send(this->client_fd, (u8*)(&hndshk), sizeof(HandshakeHeader), 0);
+			valsend = send(this->client_fd, (u8*)(&hndshk), sizeof(HandshakeHeader), 0);
+			if(valsend < 0)
+			{
+				g_printerr("Second handshake failed send to server\n");
+				this->conn_valid = false;
+			}
 		}
 		else
 		{
 			//Connection incompatible.
 			this->conn_valid = false;	//this line should be redundant.
+			g_printerr("Failed to negotiate protocol version with server\n");
 			close(this->client_fd);
 		}
 	}
@@ -72,6 +89,8 @@ bool matrix_client::send_frame(u16 *buffer,int height, int width)
 	int valsend = send(this->client_fd, (u8*)buffer, height * width * 2, 0);
 	if(valsend != -1)
 		ret_val = true;
+	else
+		g_printerr("Frame failed to send to the server\n");
 	return ret_val;
 }
 
