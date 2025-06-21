@@ -43,7 +43,7 @@
 #include "../rasterize.h"
 #include "../saves.h"
 #include "../frontend/modules/osd/agg/agg_osd.h"
-#include "../frontend/posic/shared/matrix_client.h"
+#include "../frontend/posix/shared/matrix_client.h"
 #include "../shared/desmume_config.h"
 #include "../commandline.h"
 #include "../slot2.h"
