@@ -140,7 +140,7 @@ bool matrix_client::send_frame(u16 *buffer,int height, int width)
 	frame_header.priority = 0xFF;
 	frame_header.protocol_vers = PROTOCOL_VERSION;
 	frame_header.intensity = 0.0f;
-	g_printerr("X = %d, Y = %d\n", width, height);
+	//g_printerr("X = %d, Y = %d\n", width, height);
 	int valsend;
 	valsend = this->send_all(this->client_fd, (u8*)(&frame_header), sizeof(frame_header), 0);
 	if(valsend != -1)
@@ -158,13 +158,12 @@ bool matrix_client::send_frame(u16 *buffer,int height, int width)
 int matrix_client::send_all(int sock_fd, const void* buf, size_t size, int flags)
 {
 	long bytes_sent = 0;
-
 	do
 	{
 		bytes_sent += send(sock_fd, ((u8* )buf) + bytes_sent, size - bytes_sent, flags);
 		if(bytes_sent == -1)
 			break;
-	}while(bytes_sent < size);
+	}while(((unsigned long)bytes_sent) < size);
 
 	return bytes_sent;
 }
@@ -177,7 +176,7 @@ int matrix_client::recv_all(int sockfd, void *buf, size_t size)
 		bytes_recvd += read(sockfd, ((u8*)buf) + bytes_recvd, size - bytes_recvd);
 		if(bytes_recvd == -1)
 			break;
-	}while(bytes_recvd < size);
+	}while(((unsigned long)bytes_recvd) < size);
 
 	return bytes_recvd;
 }
