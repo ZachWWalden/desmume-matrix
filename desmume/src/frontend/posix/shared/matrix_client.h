@@ -39,6 +39,7 @@
 #include <iostream>
 #include <arpa/inet.h>
 #include <glib.h>
+#include <errno.h>
 
 #include "../../../types.h"
 
@@ -89,5 +90,7 @@ public:
 	bool send_frame(u16 *buffer,int height, int width);
 
 private:
+	int send_all(int sock_fd, const void *buf, size_t size, int flags);
+	int recv_all(int sockfd, void *buf, size_t size);
 };
 #endif
