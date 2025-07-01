@@ -91,6 +91,8 @@ static SDL_Window * window;
 static SDL_Renderer * renderer;
 static SDL_Texture *screen[2];
 
+int frm_cnt = 0;
+
 /* Flags to pass to SDL_SetVideoMode */
 static int sdl_videoFlags;
 
@@ -305,13 +307,14 @@ static void Draw(class configured_features *cfg, matrix_client *ts_client, matri
 		SDL_RenderCopy(renderer, screen[i], NULL, cfg->horizontal ? &destrect_h[i] : &destrect_v[i]);
 		off += n;
 		//send the current frame to matrix addresses passed through cli.
-		if(ts_client != nullptr)
+		if(ts_client != nullptr && frm_cnt > 20000)
 			ts_client->send_frame(displayInfo.nativeBuffer16[NDSDisplayID_Main], h, w);
-		if(bs_client != nullptr)
+		if(bs_client != nullptr && frm_cnt > 20000)
 			bs_client->send_frame(displayInfo.nativeBuffer16[NDSDisplayID_Touch], h, w);
 
 	}
 	SDL_RenderPresent(renderer);
+	frm_cnt++;
 	return;
 }
 
