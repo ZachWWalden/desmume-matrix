@@ -40,6 +40,7 @@
 #include <arpa/inet.h>
 #include <glib.h>
 #include <errno.h>
+#include <pthread.h>
 
 #include "../../../types.h"
 
@@ -77,7 +78,7 @@ class matrix_client
 {
 	//Attributes
 public:
-
+	volatile bool busy = false;
 private:
 	int client_fd;
 	bool conn_valid = false;
