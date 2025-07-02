@@ -307,9 +307,9 @@ static void Draw(class configured_features *cfg, matrix_client *ts_client, matri
 		SDL_RenderCopy(renderer, screen[i], NULL, cfg->horizontal ? &destrect_h[i] : &destrect_v[i]);
 		off += n;
 		//send the current frame to matrix addresses passed through cli.
-		if(ts_client != nullptr && frm_cnt > 20000)
+		if(ts_client != nullptr && frm_cnt > 1500)
 			ts_client->send_frame(displayInfo.nativeBuffer16[NDSDisplayID_Main], h, w);
-		if(bs_client != nullptr && frm_cnt > 20000)
+		if(bs_client != nullptr && frm_cnt > 1500)
 			bs_client->send_frame(displayInfo.nativeBuffer16[NDSDisplayID_Touch], h, w);
 
 	}

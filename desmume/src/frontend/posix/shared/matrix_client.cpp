@@ -140,7 +140,7 @@ bool matrix_client::send_frame(u16 *buffer,int height, int width)
 	frame_header.priority = 0xFF;
 	frame_header.protocol_vers = PROTOCOL_VERSION;
 	frame_header.intensity = 0.0f;
-	g_printerr("X = %d, Y = %d\n", width, height);
+	//g_printerr("X = %d, Y = %d\n", width, height);
 	int valsend;
 	valsend = this->send_all(this->client_fd, (u8*)(&frame_header), sizeof(frame_header), 0);
 	if(valsend != -1)
