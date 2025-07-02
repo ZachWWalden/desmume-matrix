@@ -40,6 +40,7 @@
 #include <arpa/inet.h>
 #include <glib.h>
 #include <errno.h>
+#include <pthread.h>
 
 #include "../../../types.h"
 

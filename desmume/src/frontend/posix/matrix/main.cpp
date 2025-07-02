@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <glib.h>
+#include <chrono>
 
 #ifndef VERSION
 #define VERSION "Unknown version"
@@ -307,8 +308,13 @@ static void Draw(class configured_features *cfg, matrix_client *ts_client, matri
 		SDL_RenderCopy(renderer, screen[i], NULL, cfg->horizontal ? &destrect_h[i] : &destrect_v[i]);
 		off += n;
 		//send the current frame to matrix addresses passed through cli.
+		auto startTime = std::chrono::high_resolution_clock::now();
 		if(ts_client != nullptr && frm_cnt > 1500)
 			ts_client->send_frame(displayInfo.nativeBuffer16[NDSDisplayID_Main], h, w);
+		auto endTime = std::chrono::high_resolution_clock::now();
+		//find execution time
+		auto execTime = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime);
+		std::cout << "Time To send 1 frame, " << (long)execTime.count() << " uSecs" << std::endl;
 		if(bs_client != nullptr && frm_cnt > 1500)
 			bs_client->send_frame(displayInfo.nativeBuffer16[NDSDisplayID_Touch], h, w);
 
