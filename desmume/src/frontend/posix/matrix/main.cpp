@@ -21,9 +21,11 @@
 #include <X11/Xlib.h>
 #include <SDL.h>
 #include <SDL_thread.h>
+#include <ctime>
 #include <stdlib.h>
 #include <string.h>
 #include <glib.h>
+#include <pthread.h>
 #include <chrono>
 
 #ifndef VERSION
@@ -92,8 +94,6 @@ static SDL_Window * window;
 static SDL_Renderer * renderer;
 static SDL_Texture *screen[2];
 
-int frm_cnt = 0;
-
 /* Flags to pass to SDL_SetVideoMode */
 static int sdl_videoFlags;
 
@@ -153,6 +153,19 @@ public:
 
   int firmware_language;
 };
+
+int frm_cnt = 0;
+
+struct send_thread_ctrl
+{
+	matrix_client* client;
+	u8 *buf;
+	pthread_cond_t work_ready;
+	pthread_mutex_t busy_mutex, exit_mutex;
+	pthread_t thread;
+};
+
+void* send_thread(void* arg);
 
 static void
 init_config( class configured_features *config) {
@@ -282,7 +295,7 @@ static void
 resizeWindow_stub (u16 width, u16 height, void *screen_texture) {
 }
 
-static void Draw(class configured_features *cfg, matrix_client *ts_client, matrix_client *bs_client) {
+static void Draw(class configured_features *cfg, send_thread_ctrl* client[]) {
 	const float scale = cfg->scale;
 	const unsigned w = GPU_FRAMEBUFFER_NATIVE_WIDTH, h = GPU_FRAMEBUFFER_NATIVE_HEIGHT;
 	const int ws = w * scale, hs = h * scale;
@@ -308,16 +321,14 @@ static void Draw(class configured_features *cfg, matrix_client *ts_client, matri
 		SDL_RenderCopy(renderer, screen[i], NULL, cfg->horizontal ? &destrect_h[i] : &destrect_v[i]);
 		off += n;
 		//send the current frame to matrix addresses passed through cli.
-		auto startTime = std::chrono::high_resolution_clock::now();
-		if(ts_client != nullptr && frm_cnt > 1500)
-			ts_client->send_frame(displayInfo.nativeBuffer16[NDSDisplayID_Main], h, w);
-		auto endTime = std::chrono::high_resolution_clock::now();
-		//find execution time
-		auto execTime = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime);
-		std::cout << "Time To send 1 frame, " << (long)execTime.count() << " uSecs" << std::endl;
-		if(bs_client != nullptr && frm_cnt > 1500)
-			bs_client->send_frame(displayInfo.nativeBuffer16[NDSDisplayID_Touch], h, w);
-
+		if(client[i] != nullptr && (pthread_mutex_trylock(&(client[i]->busy_mutex))) == 0)
+		{
+			// NDSDisplayID_Main is defined as 0, NDSDisplayID_Touch is defined as 1;
+			pthread_mutex_unlock(&(client[i]->busy_mutex));
+			memcpy(client[i]->buf, displayInfo.nativeBuffer16[i], n);
+			//signal the tread
+			pthread_cond_signal(&(client[i]->work_ready));
+		}
 	}
 	SDL_RenderPresent(renderer);
 	frm_cnt++;
@@ -397,14 +408,52 @@ int main(int argc, char ** argv) {
     exit(1);
   }
 
-  matrix_client *ts_client = nullptr, *bs_client = nullptr;
+  send_thread_ctrl *clients[2] = {nullptr, nullptr};
   if(my_config.ts_sink_addr != "NULL")
   {
-	ts_client = new matrix_client(my_config.ts_sink_addr);
+	clients[0] = new send_thread_ctrl;
+	clients[0]->buf = (u8*) calloc(2 * GPU_FRAMEBUFFER_NATIVE_HEIGHT * GPU_FRAMEBUFFER_NATIVE_WIDTH, 1);
+	clients[0]->client = new matrix_client(my_config.ts_sink_addr);
+	if(pthread_mutex_init(&(clients[0]->busy_mutex), nullptr) != 0)
+	{
+		g_printerr("ts mutex init failed\n");
+		exit(-1);
+	}
+	if(pthread_mutex_init(&(clients[0]->exit_mutex), nullptr) != 0)
+	{
+		g_printerr("ts exit mutex init failed\n");
+		exit(-1);
+	}
+	pthread_mutex_lock(&(clients[0]->exit_mutex));
+	if(pthread_cond_init(&(clients[0]->work_ready), nullptr) != 0)
+	{
+		g_printerr("ts signal init failed\n");
+		exit(-1);
+	}
+	pthread_create(&(clients[0]->thread), nullptr, send_thread, clients[0]);
   }
   if(my_config.bs_sink_addr != "NULL")
   {
-	bs_client = new matrix_client(my_config.bs_sink_addr);
+	clients[1] = new send_thread_ctrl;
+	clients[1]->buf = (u8*) calloc(2 * GPU_FRAMEBUFFER_NATIVE_HEIGHT * GPU_FRAMEBUFFER_NATIVE_WIDTH, 1);
+	clients[1]->client = new matrix_client(my_config.bs_sink_addr);
+	if(pthread_mutex_init(&(clients[1]->busy_mutex), nullptr) != 0)
+	{
+		g_printerr("ts mutex init failed\n");
+		exit(-1);
+	}
+	if(pthread_mutex_init(&(clients[1]->exit_mutex), nullptr) != 0)
+	{
+		g_printerr("bs exit mutex init failed\n");
+		exit(-1);
+	}
+	pthread_mutex_lock(&(clients[1]->exit_mutex));
+	if(pthread_cond_init(&(clients[1]->work_ready), nullptr) != 0)
+	{
+		g_printerr("ts signal init failed\n");
+		exit(-1);
+	}
+	pthread_create(&(clients[1]->thread), nullptr, send_thread, clients[1]);
   }
   /* use any language set on the command line */
   if ( my_config.firmware_language != -1) {
@@ -643,10 +692,16 @@ int main(int argc, char ** argv) {
     }
 #endif
   }
-
-  delete ts_client;
-  delete bs_client;
-
+  if(clients[0])
+  {
+	//Signal thread to terminate
+	pthread_mutex_unlock(&(clients[0]->exit_mutex));
+  }
+  if(clients[1])
+  {
+	//Signal thread to terminate
+	pthread_mutex_unlock(&(clients[1]->exit_mutex));
+  }
   /* Unload joystick */
   uninit_joy();
 
@@ -662,4 +717,36 @@ int main(int argc, char ** argv) {
 
 
   return 0;
+}
+
+void* send_thread(void* arg)
+{
+	send_thread_ctrl* ctrl = (send_thread_ctrl*)arg;
+	timespec tspec;
+	tspec.tv_nsec = 100000;
+	tspec.tv_sec = 0;
+
+	while(1)
+	{
+		if((pthread_mutex_trylock(&(ctrl->exit_mutex)) == 0))
+			break;
+
+		//wait for work
+		if(pthread_cond_timedwait(&(ctrl->work_ready), &(ctrl->busy_mutex), &tspec) == 0)
+		{
+			//get busy lock
+			pthread_mutex_lock(&(ctrl->busy_mutex));
+			ctrl->client->send_frame((u16*)ctrl->buf, 192, 256);
+		}
+		else
+		{
+			pthread_mutex_lock(&(ctrl->busy_mutex));
+		}
+	}
+
+	delete ctrl->client;
+	free(ctrl->buf);
+	delete ctrl;
+
+	pthread_exit(0);
 }
