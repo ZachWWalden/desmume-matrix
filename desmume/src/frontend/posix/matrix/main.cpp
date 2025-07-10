@@ -154,8 +154,6 @@ public:
   int firmware_language;
 };
 
-int frm_cnt = 0;
-
 struct send_thread_ctrl
 {
 	matrix_client* client;
@@ -331,7 +329,6 @@ static void Draw(class configured_features *cfg, send_thread_ctrl* client[]) {
 		}
 	}
 	SDL_RenderPresent(renderer);
-	frm_cnt++;
 	return;
 }
 
@@ -645,7 +642,7 @@ int main(int argc, char ** argv) {
     DrawHUD();
 #endif
 
-    Draw(&my_config, ts_client, bs_client);
+    Draw(&my_config, clients);
 
 #ifdef HAVE_LIBAGG
     osd->clear();
@@ -696,11 +693,13 @@ int main(int argc, char ** argv) {
   {
 	//Signal thread to terminate
 	pthread_mutex_unlock(&(clients[0]->exit_mutex));
+	pthread_cond_signal(&(clients[0]->work_ready));
   }
   if(clients[1])
   {
 	//Signal thread to terminate
 	pthread_mutex_unlock(&(clients[1]->exit_mutex));
+	pthread_cond_signal(&(clients[1]->work_ready));
   }
   /* Unload joystick */
   uninit_joy();
@@ -722,10 +721,10 @@ int main(int argc, char ** argv) {
 void* send_thread(void* arg)
 {
 	send_thread_ctrl* ctrl = (send_thread_ctrl*)arg;
-	timespec tspec;
-	tspec.tv_nsec = 100000;
-	tspec.tv_sec = 0;
-
+	// timespec tspec;
+	// tspec.tv_nsec = 100000;
+	// tspec.tv_sec = 0;
+	/*
 	while(1)
 	{
 		if((pthread_mutex_trylock(&(ctrl->exit_mutex)) == 0))
@@ -742,6 +741,19 @@ void* send_thread(void* arg)
 		{
 			pthread_mutex_lock(&(ctrl->busy_mutex));
 		}
+	}
+	*/
+	pthread_mutex_lock(&(ctrl->busy_mutex));
+	while(1)
+	{
+		pthread_cond_wait(&(ctrl->work_ready), &(ctrl->busy_mutex));
+
+		if((pthread_mutex_trylock(&(ctrl->exit_mutex)) == 0))
+			break;
+
+		//get busy lock
+		pthread_mutex_lock(&(ctrl->busy_mutex));
+		ctrl->client->send_frame((u16*)ctrl->buf, 192, 256);
 	}
 
 	delete ctrl->client;
