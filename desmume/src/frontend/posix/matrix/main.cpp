@@ -322,10 +322,26 @@ static void Draw(class configured_features *cfg, send_thread_ctrl* client[]) {
 		if(client[i] != nullptr && (pthread_mutex_trylock(&(client[i]->busy_mutex))) == 0)
 		{
 			// NDSDisplayID_Main is defined as 0, NDSDisplayID_Touch is defined as 1;
-			pthread_mutex_unlock(&(client[i]->busy_mutex));
+			// g_printerr("main thread: before busy mutex unlock\n");
+			if(pthread_mutex_unlock(&(client[i]->busy_mutex)) != 0)
+			{
+				if(errno == EINVAL)
+					g_printerr("EINVAL\n");
+				else if(errno == EBUSY)
+					g_printerr("EBUSY\n");
+				else if(errno == EAGAIN)
+					g_printerr("EAGAIN\n");
+				else if(errno == EDEADLOCK)
+					g_printerr("EDEADLOCK\n");
+				else if(errno == EPERM)
+					g_printerr("EPERM\n");
+			}
+			// g_printerr("main thread: before memcpy\n");
 			memcpy(client[i]->buf, displayInfo.nativeBuffer16[i], n);
+			// g_printerr("main thread: before work reay signal\n");
 			//signal the tread
 			pthread_cond_signal(&(client[i]->work_ready));
+			// g_printerr("main thread: condition signalled\n");
 		}
 	}
 	SDL_RenderPresent(renderer);
@@ -721,40 +737,23 @@ int main(int argc, char ** argv) {
 void* send_thread(void* arg)
 {
 	send_thread_ctrl* ctrl = (send_thread_ctrl*)arg;
-	// timespec tspec;
-	// tspec.tv_nsec = 100000;
-	// tspec.tv_sec = 0;
-	/*
-	while(1)
-	{
-		if((pthread_mutex_trylock(&(ctrl->exit_mutex)) == 0))
-			break;
 
-		//wait for work
-		if(pthread_cond_timedwait(&(ctrl->work_ready), &(ctrl->busy_mutex), &tspec) == 0)
-		{
-			//get busy lock
-			pthread_mutex_lock(&(ctrl->busy_mutex));
-			ctrl->client->send_frame((u16*)ctrl->buf, 192, 256);
-		}
-		else
-		{
-			pthread_mutex_lock(&(ctrl->busy_mutex));
-		}
-	}
-	*/
+	// g_print("send thread: Before send thread loop\n");
 	pthread_mutex_lock(&(ctrl->busy_mutex));
+	// g_print("send thread: mutex locked before send thread loop\n");
 	while(1)
 	{
 		pthread_cond_wait(&(ctrl->work_ready), &(ctrl->busy_mutex));
+		// g_print("send thread: Condition signalled, lock  reacquired\n");
 
 		if((pthread_mutex_trylock(&(ctrl->exit_mutex)) == 0))
 			break;
 
-		//get busy lock
-		pthread_mutex_lock(&(ctrl->busy_mutex));
 		ctrl->client->send_frame((u16*)ctrl->buf, 192, 256);
+		// g_print("send thread: Frame sent\n");
 	}
+
+	// g_print("send thread: Send thread exiting\n");
 
 	delete ctrl->client;
 	free(ctrl->buf);
