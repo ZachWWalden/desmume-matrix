@@ -78,7 +78,7 @@ class matrix_client
 {
 	//Attributes
 public:
-
+	volatile bool busy = false;
 private:
 	int client_fd;
 	bool conn_valid = false;
