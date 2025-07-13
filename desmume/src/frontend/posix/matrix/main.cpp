@@ -730,7 +730,7 @@ int main(int argc, char ** argv) {
   SDL_Quit();
   NDS_DeInit();
 
-
+  g_printerr("Main thread: closing\n");
   return 0;
 }
 
@@ -747,14 +747,17 @@ void* send_thread(void* arg)
 		// g_print("send thread: Condition signalled, lock  reacquired\n");
 
 		if((pthread_mutex_trylock(&(ctrl->exit_mutex)) == 0))
+		{
+			g_printerr("Send thread: closing\n");
 			break;
+		}
 
 		ctrl->client->send_frame((u16*)ctrl->buf, 192, 256);
 		// g_print("send thread: Frame sent\n");
 	}
 
 	// g_print("send thread: Send thread exiting\n");
-	ctrl->client->send_temination_packet();
+	ctrl->client->send_termination_packet();
 
 	delete ctrl->client;
 	free(ctrl->buf);

@@ -170,7 +170,7 @@ bool matrix_client::send_frame(u16 *buffer,int height, int width)
 		g_printerr("Frame failed to, const void buf[.size], size_t size, int flags send to the server\n");
 	return ret_val;
 }
-bool matrix_client::send_temination_packet()
+bool matrix_client::send_termination_packet()
 {
 	if(!this->conn_valid)
 		return false;
