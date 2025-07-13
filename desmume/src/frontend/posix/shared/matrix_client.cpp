@@ -1,4 +1,5 @@
 #include "matrix_client.h"
+#include "glib.h"
 
 matrix_client::matrix_client()
 {
@@ -174,11 +175,12 @@ bool matrix_client::send_frame(u16 *buffer,int height, int width)
 		g_printerr("Frame failed to, const void buf[.size], size_t size, int flags send to the server\n");
 	return ret_val;
 }
-bool matrix_client::send_temination_packet()
+bool matrix_client::send_termination_packet()
 {
 	if(!this->conn_valid)
 		return false;
 
+	g_printerr("Sending Term Packet\n");
 	bool ret_val = false;
 
 	SinkPacketHeader termination_header;
@@ -195,6 +197,9 @@ bool matrix_client::send_temination_packet()
 	int valsend = this->send_all(this->client_fd, (u8*)&termination_header, sizeof(termination_header),0);
 	if(valsend != -1)
 		ret_val = true;
+
+	close(this->client_fd);
+	this->conn_valid = false;
 
 	return ret_val;
 }

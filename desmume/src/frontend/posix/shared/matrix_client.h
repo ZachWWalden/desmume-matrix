@@ -89,7 +89,7 @@ public:
 	~matrix_client();
 
 	bool send_frame(u16 *buffer,int height, int width);
-	bool send_temination_packet();
+	bool send_termination_packet();
 
 private:
 	int send_all(int sock_fd, const void *buf, size_t size, int flags);
