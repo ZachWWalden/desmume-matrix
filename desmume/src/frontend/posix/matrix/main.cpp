@@ -754,6 +754,7 @@ void* send_thread(void* arg)
 	}
 
 	// g_print("send thread: Send thread exiting\n");
+	ctrl->client->send_temination_packet();
 
 	delete ctrl->client;
 	free(ctrl->buf);

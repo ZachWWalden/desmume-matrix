@@ -135,6 +135,8 @@ matrix_client::matrix_client(std::string addr)
 matrix_client::~matrix_client()
 {
 	//TODO destroy object.
+	close(this->client_fd);
+	this->conn_valid = false;
 }
 
 bool matrix_client::send_frame(u16 *buffer,int height, int width)
@@ -166,6 +168,30 @@ bool matrix_client::send_frame(u16 *buffer,int height, int width)
 		ret_val = true;
 	else
 		g_printerr("Frame failed to, const void buf[.size], size_t size, int flags send to the server\n");
+	return ret_val;
+}
+bool matrix_client::send_temination_packet()
+{
+	if(!this->conn_valid)
+		return false;
+
+	bool ret_val = false;
+
+	SinkPacketHeader termination_header;
+	termination_header.bytes_per_pixel = 0;
+	termination_header.color_mode = 0xFF;
+	termination_header.h_res = 0;
+	termination_header.v_res = 0;
+	termination_header.h_loc = 0;
+	termination_header.v_loc = 0;
+	termination_header.priority = 0xFF;
+	termination_header.protocol_vers = PROTOCOL_VERSION;
+	termination_header.intensity = 0.0f;
+
+	int valsend = this->send_all(this->client_fd, (u8*)&termination_header, sizeof(termination_header),0);
+	if(valsend != -1)
+		ret_val = true;
+
 	return ret_val;
 }
 
