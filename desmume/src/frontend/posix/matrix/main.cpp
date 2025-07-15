@@ -708,12 +708,14 @@ int main(int argc, char ** argv) {
   if(clients[0])
   {
 	//Signal thread to terminate
+	clients[0]->client->send_termination_packet();
 	pthread_mutex_unlock(&(clients[0]->exit_mutex));
 	pthread_cond_signal(&(clients[0]->work_ready));
   }
   if(clients[1])
   {
 	//Signal thread to terminate
+	clients[1]->client->send_termination_packet();
 	pthread_mutex_unlock(&(clients[1]->exit_mutex));
 	pthread_cond_signal(&(clients[1]->work_ready));
   }
