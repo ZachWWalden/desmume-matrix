@@ -708,16 +708,20 @@ int main(int argc, char ** argv) {
   if(clients[0])
   {
 	//Signal thread to terminate
-	clients[0]->client->send_termination_packet();
 	pthread_mutex_unlock(&(clients[0]->exit_mutex));
+	pthread_mutex_lock(&(clients[0]->busy_mutex));
+	pthread_mutex_unlock(&(clients[0]->busy_mutex));
 	pthread_cond_signal(&(clients[0]->work_ready));
+	pthread_join(clients[0]->thread, nullptr);
   }
   if(clients[1])
   {
 	//Signal thread to terminate
-	clients[1]->client->send_termination_packet();
 	pthread_mutex_unlock(&(clients[1]->exit_mutex));
+	pthread_mutex_lock(&(clients[1]->busy_mutex));
+	pthread_mutex_unlock(&(clients[1]->busy_mutex));
 	pthread_cond_signal(&(clients[1]->work_ready));
+	pthread_join(clients[1]->thread, nullptr);
   }
   /* Unload joystick */
   uninit_joy();
