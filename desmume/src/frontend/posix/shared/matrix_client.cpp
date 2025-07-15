@@ -83,8 +83,6 @@ matrix_client::matrix_client(std::string addr)
 			g_printerr("EPROTOTYPE");
 		else if(errno == ETIMEDOUT)
 			g_printerr("ETIMEDOUT");
-		else
-			g_printerr(strerror(errno));
 		this->conn_valid = false;
     }
 	//send handshake packet
@@ -131,7 +129,6 @@ matrix_client::matrix_client(std::string addr)
 			close(this->client_fd);
 		}
 	}
-	g_printerr("Conn established\n");
 }
 matrix_client::~matrix_client()
 {
@@ -180,7 +177,6 @@ bool matrix_client::send_termination_packet()
 	if(!this->conn_valid)
 		return false;
 
-	g_printerr("Sending Term Packet\n");
 	bool ret_val = false;
 
 	SinkPacketHeader termination_header;

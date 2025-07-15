@@ -322,10 +322,7 @@ static void Draw(class configured_features *cfg, send_thread_ctrl* client[]) {
 		if(client[i] != nullptr && (pthread_mutex_trylock(&(client[i]->busy_mutex))) == 0)
 		{
 			// NDSDisplayID_Main is defined as 0, NDSDisplayID_Touch is defined as 1;
-			// g_printerr("main thread: before memcpy\n");
 			memcpy(client[i]->buf, displayInfo.nativeBuffer16[i], n);
-			// g_printerr("main thread: before work reay signal\n");
-			// g_printerr("main thread: before busy mutex unlock\n");
 			if(pthread_mutex_unlock(&(client[i]->busy_mutex)) != 0)
 			{
 				if(errno == EINVAL)
@@ -341,7 +338,6 @@ static void Draw(class configured_features *cfg, send_thread_ctrl* client[]) {
 			}
 			//signal the tread
 			pthread_cond_signal(&(client[i]->work_ready));
-			// g_printerr("main thread: condition signalled\n");
 		}
 	}
 	SDL_RenderPresent(renderer);
@@ -708,16 +704,20 @@ int main(int argc, char ** argv) {
   if(clients[0])
   {
 	//Signal thread to terminate
-	clients[0]->client->send_termination_packet();
 	pthread_mutex_unlock(&(clients[0]->exit_mutex));
+	pthread_mutex_lock(&(clients[0]->busy_mutex));
+	pthread_mutex_unlock(&(clients[0]->busy_mutex));
 	pthread_cond_signal(&(clients[0]->work_ready));
+	pthread_join(clients[0]->thread, nullptr);
   }
   if(clients[1])
   {
 	//Signal thread to terminate
-	clients[1]->client->send_termination_packet();
 	pthread_mutex_unlock(&(clients[1]->exit_mutex));
+	pthread_mutex_lock(&(clients[1]->busy_mutex));
+	pthread_mutex_unlock(&(clients[1]->busy_mutex));
 	pthread_cond_signal(&(clients[1]->work_ready));
+	pthread_join(clients[1]->thread, nullptr);
   }
   /* Unload joystick */
   uninit_joy();
@@ -740,13 +740,10 @@ void* send_thread(void* arg)
 {
 	send_thread_ctrl* ctrl = (send_thread_ctrl*)arg;
 
-	// g_print("send thread: Before send thread loop\n");
 	pthread_mutex_lock(&(ctrl->busy_mutex));
-	// g_print("send thread: mutex locked before send thread loop\n");
 	while(1)
 	{
 		pthread_cond_wait(&(ctrl->work_ready), &(ctrl->busy_mutex));
-		// g_print("send thread: Condition signalled, lock  reacquired\n");
 
 		if((pthread_mutex_trylock(&(ctrl->exit_mutex)) == 0))
 		{
@@ -755,10 +752,8 @@ void* send_thread(void* arg)
 		}
 
 		ctrl->client->send_frame((u16*)ctrl->buf, 192, 256);
-		// g_print("send thread: Frame sent\n");
 	}
 
-	// g_print("send thread: Send thread exiting\n");
 	ctrl->client->send_termination_packet();
 
 	delete ctrl->client;
