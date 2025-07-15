@@ -322,6 +322,9 @@ static void Draw(class configured_features *cfg, send_thread_ctrl* client[]) {
 		if(client[i] != nullptr && (pthread_mutex_trylock(&(client[i]->busy_mutex))) == 0)
 		{
 			// NDSDisplayID_Main is defined as 0, NDSDisplayID_Touch is defined as 1;
+			// g_printerr("main thread: before memcpy\n");
+			memcpy(client[i]->buf, displayInfo.nativeBuffer16[i], n);
+			// g_printerr("main thread: before work reay signal\n");
 			// g_printerr("main thread: before busy mutex unlock\n");
 			if(pthread_mutex_unlock(&(client[i]->busy_mutex)) != 0)
 			{
@@ -336,9 +339,6 @@ static void Draw(class configured_features *cfg, send_thread_ctrl* client[]) {
 				else if(errno == EPERM)
 					g_printerr("EPERM\n");
 			}
-			// g_printerr("main thread: before memcpy\n");
-			memcpy(client[i]->buf, displayInfo.nativeBuffer16[i], n);
-			// g_printerr("main thread: before work reay signal\n");
 			//signal the tread
 			pthread_cond_signal(&(client[i]->work_ready));
 			// g_printerr("main thread: condition signalled\n");
