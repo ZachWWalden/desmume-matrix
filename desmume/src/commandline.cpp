@@ -37,11 +37,6 @@
 int _scanline_filter_a = 0, _scanline_filter_b = 2, _scanline_filter_c = 2, _scanline_filter_d = 4;
 int _commandline_linux_nojoy = 0;
 
-#ifdef HAVE_MATRIX
-, ts_sink_addr("NULL")
-, bs_sink_addr("NULL")
-#endif
-
 static char mytoupper(char c) { return ::toupper(c); }
 
 static std::string strtoupper(const std::string& str)
