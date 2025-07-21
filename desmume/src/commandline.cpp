@@ -218,8 +218,8 @@ CommandLine::CommandLine()
 	_jit_size                 = -1;
 #endif
 #ifdef HAVE_MATRIX
-	_ts_sink_addr			  = NULL;
-	_bs_sink_addr			  = NULL;
+	ts_sink_addr			  = "NULL";
+	bs_sink_addr			  = "NULL";
 #endif
 	_slot1                   = NULL;
 	_slot1_fat_dir           = NULL;
