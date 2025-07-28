@@ -13,6 +13,10 @@ LED matrix. The server code and network protocol definition can be found [here](
 The added functionality is currently only accessible on POSIX systems through
 a CLI frontend.
 
+## Video Demonstration
+
+[![Video Demonstration](https://img.youtube.com/vi/yfpDpgpz51Q/0.jpg)](https://www.youtube.com/watch?v=yfpDpgpz51Q "Video Demonstration")
+
 # Usage
 The program allows you to send frame data to a server representing the
 top screen of the DS or the bottom screen, or both. To do so you must
